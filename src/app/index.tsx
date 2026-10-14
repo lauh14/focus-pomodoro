@@ -1,38 +1,103 @@
-import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
+import {View, Text, Image, StyleSheet, Pressable, 
+ImageSourcePropType} from 'react-native';
+import { useRef, useState } from 'react';
+import { FokusButton } from '../components/FokusButton';
+import { ActionButton } from '../components/ActionButton';
+import { Timer } from '../components/Timer';
 
-export default function Index() {
-    return (
+interface PomodoroTimer{
+    id: string;
+    initialValue: number;
+    imagem: ImageSourcePropType;
+}
+
+const pomodoro = [
+    {
+        id:'foco',
+        initialValue: 25,
+        imagem: require('../assets/foco.png'),
+        display: 'Foco'
+    },
+    {
+        id:'curto',
+        initialValue: 5,
+        imagem: require('../assets/curto.png'),
+        display: 'Pausa Curta'
+    },
+    {
+        id:'longo',
+        initialValue: 15,
+        imagem: require('../assets/longo.png'),
+        display: 'Pausa Longo'
+    },
+]
+
+export default function Index(){
+
+    const [typeTimer, setTypeTimer] = useState<PomodoroTimer>(pomodoro[0])
+    const [TimerRunning, setTimerRunning] = useState(false)
+    const [seconds, setSeconds] = useState(pomodoro[0].initialValue)
+    const timerRef = useRef<ReturnType<typeof setInterval> | null> (null)
+
+    const clear = () => {
+        if(timerRef.current != null){
+            clearInterval(timerRef.current!)
+            timerRef.current = null
+            setTimerRunning(false)
+    }
+
+    const toogleTypeTimer = (newTypeTimer: PomodoroTimer) => {
+        timerRef.current = null
+        setSeconds(newTypeTimer.initialValue)
+        clear()
+    }
+
+    const toogleTimer = () =>{
+        if(timerRef.current){
+            //pausar
+            clearInterval(timerRef.current)
+            timerRef.current = null
+            return
+        }
+        setTimerRunning(false)
+        const id = setInterval(() =>{
+            setSeconds (oldState => {
+                return oldState - 1
+            }
+            )})
+            console.log('timer rolando')
+        }, 1000
+        timerRef.current = id
+    }
+
+    return(
         <View style={styles.container}>
-            <Image source={require('@/assets/foco.png')}/>
-            <View style={styles.action}>
+            <Image source={typeTimer.imagem}/>
+            <View style={styles.actions}>
                 <View style={styles.context}>
-                    <Pressable style={styles.contextButtonActive}>
-                        <Text style={styles.contextButtonText}>
-                            Foco
-                        </Text>
-                    </Pressable>
-                    <Pressable>
-                        <Text style={styles.contextButtonText}>
-                            Pausa curta
-                        </Text>
-                    </Pressable>
-                    <Pressable>
-                        <Text style={styles.contextButtonText}>
-                            Pausa longa
-                        </Text>
-                    </Pressable>
+                    {pomodoro.map(p => (
+                    <ActionButton
+                     key={p.id}
+                    active={typeTimer.id === p.id}
+                    onPress={()=> setTypeTimer(p)}
+                    display={p.display}/>
+
+                    ))}
+
                 </View>
-                <Text style={styles.timer}>25:00</Text>
-                <Pressable style={styles.button}>
-                    <Text style={styles.buttonText}>Começar</Text>
-                </Pressable>
+                <Timer
+                    totalSeconds={typeTimer.initialValue}
+                />
+                <FokusButton 
+                title= {timerRef.current ? 'Pausar' : 'Começar'}
+                onPress={toogleTimer}/>
             </View>
             <View style={styles.footer}>
                 <Text style={styles.footerText}>
-                    Projeto ficticio desenvolvido para fins de aprendizagem.
+                    Projeto Fictício Desenvolvido para Fins de Aprendizagem
                 </Text>
                 <Text style={styles.footerText}>
-                    Desenvolvido pelos alunos do curso de Dev - Sesi/Senai Pederneiras
+                    Desenvolvido peelos alunos do Curso de Dev - Sesi/Senai Pederneiras
                 </Text>
             </View>
         </View>
@@ -40,57 +105,30 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
-    container: {
+    container:{
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#021123',
-        gap: 32
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#021123"
     },
-    action:{
+    actions:{
         padding: 24,
-        backgroundColor: '#14448080',
-        width: '80%',
+        backgroundColor: "#14448080",
+        width: "80%",
         borderRadius: 32,
-        borderWidth: 2,
-        borderColor: '#144480',
+        borderColor: "#144480",
         gap: 16
     },
     context:{
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    contextButtonActive:{
-        backgroundColor: '#144480',
-        borderRadius: 8
-    },
-    contextButtonText:{
-        color: '#fff',
-        fontSize: 12.5,
-        padding: 8
-    },
-    timer:{
-        color: '#fff',
-        fontSize: 48,
-        fontWeight: 'bold',
-        textAlign: 'center'
-    },
-    button:{
-        backgroundColor: '#144480',
-        borderRadius: 32,
-        padding: 8
-    },
-    buttonText:{
-        textAlign: 'center',
-        color: '#021123',
-        fontSize: 18
+        flexDirection: "row",
+        justifyContent: "space-between"
     },
     footer:{
-        width: '80%'
+        width: "80%"
     },
     footerText:{
-        textAlign: 'center',
-        color: '#98a0a8',
+        textAlign: "center",
+        color: "#98a0a0",
         fontSize: 12.5
     }
 })
